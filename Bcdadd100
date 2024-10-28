@@ -1,0 +1,34 @@
+module top_module( 
+    input [399:0] a, b,
+    input cin,
+    output cout,
+    output [399:0] sum );
+	genvar i;
+    wire carry [99:0];
+    generate
+        for (i = 0; i < 100; i = i + 1) begin : bcd_adder_chain
+            if (i == 0) begin
+                // 첫 번째 bcd_fadd는 외부에서 cin을 받음
+                bcd_fadd u_bcd_fadd (
+                    .a(a[3 + 4*i : 4*i]),
+                    .b(b[3 + 4*i : 4*i]),
+                    .cin(cin),
+                    .cout(carry[i]),
+                    .sum(sum[3 + 4*i : 4*i])
+                );
+            end else begin
+                // 나머지 bcd_fadd는 이전 모듈의 carry를 cin으로 받음
+                bcd_fadd u_bcd_fadd (
+                    .a(a[3 + 4*i : 4*i]),
+                    .b(b[3 + 4*i : 4*i]),
+                    .cin(carry[i-1]),
+                    .cout(carry[i]),
+                    .sum(sum[3 + 4*i : 4*i])
+                );
+            end
+        end
+    endgenerate
+
+    // 최종 carry-out을 cout에 연결
+    assign cout = carry[99];
+endmodule
